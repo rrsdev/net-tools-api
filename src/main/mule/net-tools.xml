@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
 http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+    <tls:context name="HTTPS_TLS_Common_Context" doc:name="TLS Context" doc:id="0970c344-8296-4cba-a13b-21ac1f3aeea3" >
+      <tls:key-store type="jks" path="keystore.jks" keyPassword="changeit" password="changeit" />
+    </tls:context>
     <http:listener-config name="net-tools-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8081" />
+        <http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS" tlsContext="HTTPS_TLS_Common_Context"/>
     </http:listener-config>
     <apikit:config name="net-tools-config" raml="net-tools.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     	<spring:config name="Spring_Config" doc:id="3b613b3b-3bc8-47ee-897c-e00fe681b775" files="beans.xml" />
 	<spring:security-manager>
 		<spring:delegate-security-provider name="memory-provider" delegate-ref="authenticationManager" />
 	</spring:security-manager>
-    <flow name="ui" doc:id="94b97777-bd63-4abb-8093-a5c8ac97aa17" >
+  <flow name="ui" doc:id="94b97777-bd63-4abb-8093-a5c8ac97aa17" >
 		<http:listener doc:name="Listener" doc:id="7e20b485-577c-4530-b2b1-66b6a84d5694" config-ref="net-tools-httpListenerConfig" path="/*" outputMimeType="text/html"/>
 		<http:basic-security-filter doc:name="Basic security filter" doc:id="cb77f47e-923a-4195-86fc-23bbf2f01311" realm="mule" />
 		<ee:transform doc:name="Transform Message" doc:id="f2311504-43c7-4db0-9b0a-a5a4fdd80d90" >
@@ -20,23 +24,14 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 			<ee:variables >
 				<ee:set-variable variableName="path" ><![CDATA[%dw 2.0
 output application/java
+var thePath = attributes.requestPath
 ---
-attributes.requestPath]]></ee:set-variable>
+if ("/" ~= thePath) "/index.html" else thePath]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<scripting:execute engine="groovy" doc:name="Execute" doc:id="d4d71943-f44e-4acb-8678-951dbf1aa6e1">
-			<scripting:code>if (&quot;/&quot;.equals(path)) {
-	org.mule.runtime.core.api.util.IOUtils.getResourceAsString(&quot;web/index.html&quot;, this.getClass());
-} else {
-	org.mule.runtime.core.api.util.IOUtils.getResourceAsString(&quot;web&quot; + path, this.getClass());
-}</scripting:code>
-			<scripting:parameters><![CDATA[#[{path: vars.path}]]]></scripting:parameters>
-		</scripting:execute>
-	</flow>
-    <flow name="ui-css" doc:id="bc50f62f-51f7-4841-955b-014eb52b2976" >
-		<http:listener doc:name="Listener" doc:id="24f59827-51c3-48d1-abce-18d4143f58f3" config-ref="net-tools-httpListenerConfig" path="/css/*" outputMimeType="text/css"/>
-		<flow-ref doc:name="Flow Reference" doc:id="4a35a0d4-31a1-4514-a348-a4eb4d089559" name="ui"/>
-	</flow>
+    <http:load-static-resource doc:name="Load static resource" doc:id="7114e71b-9cbb-4fdd-8036-e5a8618e2721" resourceBasePath="#[(Mule::p('app.home') default '') ++ &quot;/web/&quot;]"/>
+	
+</flow>
 	<flow name="net-tools-main">
         <http:listener config-ref="net-tools-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -226,6 +221,7 @@ NetworkUtils::cipherTest(attributes.queryParams.host, attributes.queryParams.por
 	</flow>
 	<flow name="get:\traceroute:net-tools-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
 http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="a006967e-8161-45f9-af3b-d1f3386ae267">
             <ee:message>
