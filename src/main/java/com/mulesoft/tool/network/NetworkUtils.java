@@ -19,6 +19,10 @@ public class NetworkUtils {
 		return execute(new ProcessBuilder("ping", "-c", "4", host));
 	}
 
+	public static String dig(String host) throws Exception {
+		return execute(new ProcessBuilder("dig", "+short", host));
+	}
+
 	public static String resolveIPs(String host, String dnsServer) throws UnknownHostException {
 		if (dnsServer.equals("default"))
  		{

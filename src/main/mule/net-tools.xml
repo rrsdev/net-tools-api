@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/
     <http:listener-config name="net-tools-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS" tlsContext="HTTPS_TLS_Common_Context"/>
     </http:listener-config>
-    <apikit:config name="net-tools-config" raml="net-tools.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="net-tools-config" raml="net-tools.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" api="api\net-tools.raml"/>
     	<spring:config name="Spring_Config" doc:id="3b613b3b-3bc8-47ee-897c-e00fe681b775" files="beans.xml" />
 	<spring:security-manager>
 		<spring:delegate-security-provider name="memory-provider" delegate-ref="authenticationManager" />
@@ -172,6 +172,17 @@ output application/java
 import java!com::mulesoft::tool::network::NetworkUtils
 ---
 NetworkUtils::resolveIPs(attributes.queryParams.host, attributes.queryParams.dnsServer)]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\dig:net-tools-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="920199ab-3032-4f38-a7be-3f0e1289dca4">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+import java!com::mulesoft::tool::network::NetworkUtils
+---
+NetworkUtils::dig(attributes.queryParams.host)]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>

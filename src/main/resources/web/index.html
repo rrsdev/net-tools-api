@@ -140,6 +140,7 @@
                 <select name="operation" id="operation">
                     <option value="ping" selected>Ping</option>
                     <option value="traceroute">Traceroute</option>
+                    <option value="dig">Dig</option>
                     <option value="socket">Socket</option>
                     <option value="dns">DNS</option>
                     <option value="curl">curl</option>
@@ -213,6 +214,9 @@
                         $("#ip").show();
                         $("#port").show();
                         $("#socketHelp").show();
+                        break;
+                      case "dig":
+                        $("#ip").show();
                         break;
                       case "dns":
                         $("#ip").show();

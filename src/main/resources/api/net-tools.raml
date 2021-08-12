@@ -80,6 +80,21 @@ securitySchemes:
           text/plain:
             example: |
                127.0.0.1
+               
+/dig:
+  get:
+    description: Resolve host IP via the dig command
+    queryParameters:
+      host:
+        description: The the fully qualified domain name the host to test
+        type: string
+    responses: 
+      200:
+        body: 
+          text/plain:
+            example: |
+               127.0.0.1               
+               
 /curl:
   get:
     description: Runs a curl from the Mule host to the specified resource
